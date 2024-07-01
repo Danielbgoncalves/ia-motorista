@@ -1,0 +1,24 @@
+{
+  "name": "iamotorista",
+  "version": "1.0.0",
+  "description": "Monte a pista de treino e veja a IA tentando dirigir por ela",
+  "main": "principal.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Danielbgoncalves/ia-motorista.git"
+  },
+  "keywords": [
+    "\"ia\"",
+    "\"motorista\"",
+    "\"teste\"",
+    "\"dirigir\""
+  ],
+  "author": "Daniel Borges 44danbor@gmail.com",
+  "license": "MIT",
+  "dependencies": {
+    "matter-js": "^0.19.0"
+  }
+}
