@@ -1,12 +1,13 @@
 //import BuildPath from "./buildPath.js";
 //import DrawPath from "./drawPath.js";
 
+import Menu from "./menu.js";
 import jesusAjuda from "./jeususAjuda.js";
 
 
 const config = {
   type: Phaser.AUTO, 
-  width: 800,
+  width: 900,
   height: 600,
   physics: {
     default: 'matter',
@@ -17,6 +18,7 @@ const config = {
   },
   parent: 'canvas',
   scene: [
+    Menu,
     jesusAjuda
   ]
 };

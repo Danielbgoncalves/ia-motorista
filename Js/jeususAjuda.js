@@ -1,74 +1,74 @@
+const maxCarPosition = 850;
+let usuarioCria;
+
 export default class BuildPath extends Phaser.Scene {
     constructor() {
         super({ key: "BuildPath" });
 
         this.steps = [
             {extraRotation: -(Math.PI/2.2), carAngle: -20 },
-           // {extraRotation: -(Math.PI/100), carAngle: -1 },
             {extraRotation: 0, carAngle: 0 },
-           // {extraRotation: +(Math.PI/100), carAngle: +1 },
             {extraRotation: +(Math.PI/2.2), carAngle: +20 }
         ];
 
         this.podeIniciar = false;
     }
 
+    init(data){
+        usuarioCria = data.usuarioCria;
+    }
+
     preload() {
         this.load.image('paredeG', './Assets/paredeG.png');
-        this.load.image('car', './Assets/car.png');
         this.load.image('inicio', './Assets/inicio.png');
         this.load.image('chegada', './Assets/chegada.png');
-        //this.load.image('a', './Assets/a.png');
+        this.load.image('asfalto', './Assets/asfalto.png');
+        this.load.image('iniciar', './Assets/iniciar.png');
     }
 
     create() {
-        //console.log("->", this.steps[0].extraRotatiton);
+
+        // Imagens básicas da simulação
+        this.add.image(450, 300, 'asfalto');
         this.add.image(31, 400, 'inicio');
-        this.add.image(785, 300, 'chegada');
-
-        for(let i = 0; i < 20; i++){
-            let borda = this.matter.add.image(70,10, 'paredeG');
-            borda.setInteractive({ draggable: true});
-            this.matter.body.setStatic(borda.body, true);
-        }
-
-        for(let i = 0; i < 20; i++){
-            let borda = this.matter.add.image(10,70, 'paredeG');
-            borda.angle = 90;
-            borda.setInteractive({ draggable: true});
-            this.matter.body.setStatic(borda.body, true);
-        }
-
-        /*this.input.on('pointerup', (pointer) =>{
-            console.log(pointer.position);
-        });*/
-
+        this.add.image(885, 300, 'chegada');
+        let iniciarBtt = this.add.image(70, 530, 'iniciar');
+        iniciarBtt.setInteractive();
+        
+        // O carro
         this.car = this.matter.add.image(30, 400, 'car', null, { isStatic: false });
-        //this.car.setOrigin(0.5, 0)
         this.car.angle = 0;
+        
+        // Prepara a criação ou não da pista
+        this.addParedesConstantes();
+        usuarioCria ? this.pistaPersonalizada() : this.pistaPadrao();
+  
 
-        let inicial1 = this.matter.add.image(60, 360, 'paredeG'); this.matter.add.image(160, 360, 'paredeG');
-        inicial1.setInteractive({draggable: true})
-        this.matter.body.setStatic(inicial1.body, true);
+        // Raycasting setup
+        this.rayStart = new Phaser.Math.Vector2(this.car.x, this.car.y);
+        this.rayEnd = new Phaser.Math.Vector2(this.car.x + 500, this.car.y); // Raio de 500 pixels de comprimento
 
-        let inicial2 = this.matter.add.image(60, 440, 'paredeG'); this.matter.add.image(160, 440, 'paredeG');
-        inicial2.setInteractive({draggable: true})
-        this.matter.body.setStatic(inicial2.body, true);
+        this.graphics = this.add.graphics({ lineStyle: { width: 2, color: 0xff0000 } });
 
-        this.matter.body.setStatic(inicial1.body, true);
-        this.matter.body.setStatic(inicial2.body, true);
+        this.distancias = [];  
 
-        /*this.inicial3 = this.matter.add.image(210, 402, 'paredeG');
-        this.inicial3.angle = 90;
-        this.inicial3.setInteractive({draggable: true})
-        this.matter.body.setStatic(this.inicial3.body, true);*/
-        this.input.on('drag', function (pointer, gameObject, dragX, dragY) {
-            gameObject.x = dragX;
-            gameObject.y = dragY;
-            //console.log(`Pointer position: x=${pointer.x}, y=${pointer.y}`);
-            console.log(`Dragged to: x=${dragX}, y=${dragY}`);
+        // botao de inicio da simulação
+        iniciarBtt.on('pointerdown', ()=>{
+            this.car.x = 30;
+            this.car.y = 400;
+            this.podeIniciar = true;
         });
 
+        // escreve instrução pro usuário
+        let texto = this.escreveTexto('Arraste as paredes e monte a pista do seu jeito!');
+        this.time.delayedCall( 3000, () =>{
+            texto.destroy();
+        });
+        
+    }
+
+    pistaPadrao(){
+        // Essas são as paredes da pista
         this.matter.add.image(262, 440, 'paredeG');        
         this.matter.add.image(320, 387, 'paredeG').angle = 90;
         this.matter.add.image(205, 302, 'paredeG').angle = 90; 
@@ -87,75 +87,68 @@ export default class BuildPath extends Phaser.Scene {
         this.matter.add.image(575, 452, 'paredeG');  
         this.matter.add.image(675, 452, 'paredeG');  
         this.matter.add.image(775, 452, 'paredeG');  
+        this.matter.add.image(875, 452, 'paredeG');  
         this.matter.add.image(577, 375, 'paredeG');  
         this.matter.add.image(677, 375, 'paredeG');  
-        this.matter.add.image(777, 375, 'paredeG');  
+        this.matter.add.image(777, 375, 'paredeG');
+        this.matter.add.image(877, 375, 'paredeG');
+    }
 
+    pistaPersonalizada(){
+        for(let i = 0; i < 20; i++){
+            let borda = this.matter.add.image(70,10, 'paredeG');
+            borda.setInteractive({ draggable: true});
+            this.matter.body.setStatic(borda.body, true);
+        }
 
+        for(let i = 0; i < 20; i++){
+            let borda = this.matter.add.image(10,70, 'paredeG');
+            borda.angle = 90;
+            borda.setInteractive({ draggable: true});
+            this.matter.body.setStatic(borda.body, true);
+        }
+        
         this.input.on('drag', (pointer, obj, dragX, dragY) => {
             obj.x = dragX;
             obj.y = dragY;
         });
-
-        // Raycasting setup
-        this.rayStart = new Phaser.Math.Vector2(this.car.x, this.car.y);
-        this.rayEnd = new Phaser.Math.Vector2(this.car.x + 500, this.car.y); // Ray length of 500 units to the right
-
-        this.graphics = this.add.graphics({ lineStyle: { width: 2, color: 0xff0000 } });
-        //console.log(this.car.rotation);
-
-        this.distancias = [];  
-        this.podeir = 0;    
-
-        this.input.on('pointerdown', (pointer) =>{
-            if(pointer.position.x > 750) this.podeIniciar = true;
-        });
-        
-        
     }
 
-   /* update() {
-        //console.log("->", this.steps[0].extraRotatiton);
-        for(let i = 0; i < 3; i++){
+    addParedesConstantes(){
+        let values = [
+            {x: 60, y: 360},
+            {x: 160, y: 360},
+            {x: 60, y: 440},
+            {x: 160, y: 440}
+        ];
 
-            // Update ray position
-            this.rayStart.set(this.car.x + 26, this.car.y);
-            //console.log(this.steps[1].extraRotatiton)
-            this.rayEnd.set(this.car.x + 500 * Math.cos(this.car.rotation + this.steps[i].extraRotatiton ), this.car.y + 500 * Math.sin(this.car.rotation + this.steps[i].extraRotatiton ));
-           
+        values.forEach((body) =>{
+            let parede = this.matter.add.image(body.x, body.y, 'paredeG'); 
+            parede.setInteractive({draggable: true});
+            this.matter.body.setStatic(parede.body, true);
+        });
 
-            // Clear previous drawings
-            this.graphics.clear();
+    }
 
-            // Draw ray
-            this.graphics.lineBetween(this.rayStart.x, this.rayStart.y, this.rayEnd.x, this.rayEnd.y);
+    escreveTexto(conteudo, textPositionX){
+        let escrita = this.add.text(450, 200, conteudo, {
+            font: '25px Arial', 
+            fill: '#ffffff',
+            align: 'center',
+        });
+        return escrita.setOrigin(0.5);
 
-            // Find intersections
-            const collisions = this.findRayCollisions(this.rayStart, this.rayEnd);
-
-            if (collisions.length > 0) {
-                const closestCollision = collisions.reduce((closest, collision) => {
-                    const distance = Phaser.Math.Distance.Between(this.car.x, this.car.y, collision.x, collision.y);
-                    return (!closest || distance < closest.distance) ? { ...collision, distance } : closest;
-                }, null);
-
-                // Draw collision point
-                this.graphics.fillStyle(0x00ff00, 1);
-                this.graphics.fillCircle(closestCollision.x, closestCollision.y, 5);
-
-                // Log distance
-                //console.log('Distance to collision:', closestCollision.distance);
-            }
-        }
-    }*/
+    }
 
     update() {
         if(this.podeIniciar){
-            
-
-        if(this.car.x > 750)this.podeIniciar = false;
+                   
         this.graphics.clear(); // Limpa os desenhos anteriores
-        
+        if(this.car.x > maxCarPosition){
+            this.podeIniciar = false;
+            return;
+        }
+
         this.steps.forEach(step => {
             const rayStart = new Phaser.Math.Vector2(
                 this.car.x + 26 * Math.cos(this.car.rotation),
@@ -196,7 +189,6 @@ export default class BuildPath extends Phaser.Scene {
             angle: 0,
         };
         let bestAngle = 0;
-        let maxAngle;
         for(let i = 0; i < this.distancias.length; i ++){
             if( this.distancias[i].dist > maxDist){
                 maxDist = this.distancias[i].dist
@@ -221,7 +213,7 @@ export default class BuildPath extends Phaser.Scene {
 
         //if(this.inicial3.x > 550) this.podeIniciar = true;
 
-        const force = 0.5; // Adjust this value for desired speed
+        const force = 0.5; // "velocidade" do carro
         const velocityX = Math.cos(this.car.rotation ) * force;
         const velocityY = Math.sin(this.car.rotation ) * force;
         this.car.setVelocity(velocityX, velocityY);
@@ -231,8 +223,8 @@ export default class BuildPath extends Phaser.Scene {
     }
 
     findRayCollisions(rayStart, rayEnd) {
-        const bodies = this.matter.world.localWorld.bodies;
-        const collisions = [];
+        const bodies = this.matter.world.localWorld.bodies; // Encontra todos os corpos colidíveis do mundo
+        const collisions = []; 
 
         bodies.forEach(body => {
             const vertices = body.vertices;
